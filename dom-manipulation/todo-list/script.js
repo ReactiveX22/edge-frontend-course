@@ -3,17 +3,30 @@ const add_wish_btn = document.getElementById("add_wish_btn");
 const wish_container = document.getElementById("wish_container");
 
 let wish_list = [];
-let wish_list_str = localStorage.getItem("wish_list");
-logWishList();
 
-if (!wish_list_str) {
-  wish_list = [];
-} else {
-  wish_list = JSON.parse(wish_list_str);
-  for (let i = 0; i < wish_list.length; i++) {
-    createWishCard(i, wish_list[i].title, wish_list[i].fulfilled);
-  }
-}
+fetch("https://jsonplaceholder.typicode.com/todos/")
+  .then((response) => response.json())
+  .then((json) => {
+    wish_list = json;
+
+    const wish_list_str = localStorage.getItem("wish_list");
+    if (!wish_list_str) {
+      localStorage.setItem("wish_list", JSON.stringify(wish_list));
+    } else {
+      wish_list = JSON.parse(wish_list_str);
+    }
+
+    logWishList();
+
+    wish_list.forEach((wish, index) => {
+      createWishCard(index, wish.title, wish.completed);
+    });
+  })
+  .catch((error) => {
+    console.error("Error fetching wish list:", error);
+  });
+
+logWishList();
 
 if (!wish_input || !add_wish_btn || !wish_container) {
   console.error("Something is missing");
@@ -28,15 +41,33 @@ function deleteWishElement(id) {
 
 function markWishFulfilled(id, checkbox) {
   const card = document.getElementById(id);
+  wish_list[id].fulfilled = checkbox.checked;
+
   if (checkbox.checked) {
     card.style.textDecoration = "line-through";
     card.style.backgroundColor = "#d3f9d8";
-    wish_list[id].fulfilled = true;
   } else {
     card.style.textDecoration = "none";
     card.style.backgroundColor = "white";
-    wish_list[id].fulfilled = false;
   }
+
+  fetch(`https://jsonplaceholder.typicode.com/todos/${wish_list[id].id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      ...wish_list[id],
+      completed: checkbox.checked,
+    }),
+  })
+    .then((response) => response.json())
+    .then((updatedWish) => {
+      console.log("Wish updated:", updatedWish);
+    })
+    .catch((error) => {
+      console.error("Error updating wish:", error);
+    });
 
   localStorage.setItem("wish_list", JSON.stringify(wish_list));
   logWishList();
@@ -73,7 +104,27 @@ function createWishCard(id, title, fulfilled = false) {
     if (newTitle && newTitle.trim() !== "") {
       cardTitleEl.innerText = newTitle;
       wish_list[id].title = newTitle;
+
+      fetch(`https://jsonplaceholder.typicode.com/todos/${wish_list[id].id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...wish_list[id],
+          title: newTitle,
+        }),
+      })
+        .then((response) => response.json())
+        .then((updatedWish) => {
+          console.log("Wish updated:", updatedWish);
+        })
+        .catch((error) => {
+          console.error("Error updating wish:", error);
+        });
+
       localStorage.setItem("wish_list", JSON.stringify(wish_list));
+      logWishList();
     }
   };
 
