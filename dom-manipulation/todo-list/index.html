@@ -10,21 +10,23 @@
       crossorigin="anonymous"
     />
     <script defer src="script.js"></script>
-    <title>To Do App</title>
+    <title>My Wish List</title>
   </head>
   <body>
     <div class="container">
       <div>
-        <h1 class="title">My ToDo List</h1>
+        <h1 class="title">My Wish List</h1>
         <input
           type="text"
-          name="new_todo"
-          id="todo_input"
-          placeholder="Enter Todo"
+          name="new_wish"
+          id="wish_input"
+          placeholder="Enter Wish Item"
         />
-        <button id="add_todo_btn">Add</button>
+        <button id="add_wish_btn" class="btn btn-primary">
+          Add to Wish List
+        </button>
       </div>
-      <div id="todo_container" class="container"></div>
+      <div id="wish_container" class="container mt-3"></div>
     </div>
 
     <script

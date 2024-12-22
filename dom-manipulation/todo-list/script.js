@@ -1,80 +1,133 @@
-const todo_input = document.getElementById("todo_input");
-const add_todo_btn = document.getElementById("add_todo_btn");
-const todo_container = document.getElementById("todo_container");
+const wish_input = document.getElementById("wish_input");
+const add_wish_btn = document.getElementById("add_wish_btn");
+const wish_container = document.getElementById("wish_container");
 
-let todo_list = [];
-let todo_list_str = localStorage.getItem("todo_list");
+let wish_list = [];
+let wish_list_str = localStorage.getItem("wish_list");
+logWishList();
 
-if (!todo_list_str) {
-  todo_list = [];
+if (!wish_list_str) {
+  wish_list = [];
 } else {
-  todo_list = todo_list_str.split(",");
-  for (let i = 0; i < todo_list.length; i++) {
-    createCard(i, todo_list[i]);
+  wish_list = JSON.parse(wish_list_str);
+  for (let i = 0; i < wish_list.length; i++) {
+    createWishCard(i, wish_list[i].title, wish_list[i].fulfilled);
   }
 }
 
-if (!todo_input || !add_todo_btn || !todo_container) {
+if (!wish_input || !add_wish_btn || !wish_container) {
   console.error("Something is missing");
 }
 
-function deleteElement(id) {
+function deleteWishElement(id) {
   document.getElementById(id).remove();
-  todo_list.splice(id, 1);
-  localStorage.setItem("todo_list", todo_list.join(","));
-  console.log(localStorage.getItem("todo_list"));
+  wish_list.splice(id, 1);
+  localStorage.setItem("wish_list", JSON.stringify(wish_list));
+  logWishList();
 }
 
-function createCard(id, title) {
+function markWishFulfilled(id, checkbox) {
+  const card = document.getElementById(id);
+  if (checkbox.checked) {
+    card.style.textDecoration = "line-through";
+    card.style.backgroundColor = "#d3f9d8";
+    wish_list[id].fulfilled = true;
+  } else {
+    card.style.textDecoration = "none";
+    card.style.backgroundColor = "white";
+    wish_list[id].fulfilled = false;
+  }
+
+  localStorage.setItem("wish_list", JSON.stringify(wish_list));
+  logWishList();
+}
+
+function createWishCard(id, title, fulfilled = false) {
   const cardEl = document.createElement("div");
   const cardBodyEl = document.createElement("div");
   const cardTitleEl = document.createElement("h5");
   const editBtn = document.createElement("button");
   const deleteBtn = document.createElement("button");
-  const markBtn = document.createElement("button");
+  const markBtn = document.createElement("input");
 
   cardEl.id = id;
-  cardEl.classList.add("card");
-  cardBodyEl.classList.add("card-body");
-  cardTitleEl.classList.add("card-title");
+  cardEl.classList.add("card", "mb-3");
+  cardBodyEl.classList.add("card-body", "d-flex", "align-items-center");
+  cardTitleEl.classList.add("card-title", "me-3");
 
   editBtn.innerText = "Edit";
+  editBtn.classList.add("btn", "btn-warning", "btn-sm", "me-2");
   deleteBtn.innerText = "Delete";
-  markBtn.innerText = "[ ]";
+  deleteBtn.classList.add("btn", "btn-danger", "btn-sm", "me-2");
+  markBtn.type = "checkbox";
+  markBtn.classList.add("form-check-input", "me-3");
 
-  deleteBtn.onclick = () => deleteElement(id);
+  if (fulfilled) {
+    markBtn.checked = true;
+    cardTitleEl.style.textDecoration = "line-through";
+    cardEl.style.backgroundColor = "#d3f9d8";
+  }
 
-  cardBodyEl.appendChild(editBtn);
-  cardBodyEl.appendChild(deleteBtn);
-  cardBodyEl.appendChild(markBtn);
+  editBtn.onclick = () => {
+    const newTitle = prompt("Edit your wish:", title);
+    if (newTitle && newTitle.trim() !== "") {
+      cardTitleEl.innerText = newTitle;
+      wish_list[id].title = newTitle;
+      localStorage.setItem("wish_list", JSON.stringify(wish_list));
+    }
+  };
+
+  deleteBtn.onclick = () => deleteWishElement(id);
+
+  markBtn.onclick = () => markWishFulfilled(id, markBtn);
 
   cardTitleEl.innerText = title;
 
+  cardBodyEl.appendChild(markBtn);
   cardBodyEl.appendChild(cardTitleEl);
+  cardBodyEl.appendChild(editBtn);
+  cardBodyEl.appendChild(deleteBtn);
+
   cardEl.appendChild(cardBodyEl);
-  todo_container.appendChild(cardEl);
+  wish_container.appendChild(cardEl);
 }
 
-function add_todo() {
-  if (todo_input.value.trim().length === 0) {
-    alert("Enter todo");
+function addWish() {
+  if (wish_input.value.trim().length === 0) {
+    alert("Please enter a wish.");
     return;
   }
-  todo_list.push(todo_input.value);
 
-  createCard(todo_input.value);
+  const newWish = {
+    title: wish_input.value,
+    fulfilled: false,
+  };
 
-  todo_input.value = "";
+  wish_list.push(newWish);
+  createWishCard(wish_list.length - 1, newWish.title);
 
-  localStorage.setItem("todo_list", todo_list.join(","));
-
-  console.log(localStorage.getItem("todo_list"));
+  wish_input.value = "";
+  localStorage.setItem("wish_list", JSON.stringify(wish_list));
+  logWishList();
 }
 
-add_todo_btn.onclick = add_todo;
+add_wish_btn.onclick = addWish;
 
-todo_input.addEventListener("keydown", (e) => {
+wish_input.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
-    add_todo();
+    addWish();
   }
 });
+
+function logWishList() {
+  const wishListStr = localStorage.getItem("wish_list");
+
+  if (!wishListStr) {
+    console.log("No wishlist found in localStorage.");
+    return;
+  }
+
+  const wishList = JSON.parse(wishListStr);
+
+  console.log(wishList);
+}
